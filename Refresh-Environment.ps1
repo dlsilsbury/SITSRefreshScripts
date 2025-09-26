@@ -174,7 +174,6 @@ Write-Log "Data copy step finished for $Database" $config.LogFile
 $SqlSequenceFile = Join-Path (Join-Path $PSScriptRoot 'SQL') 'CopySequencesIntoSITSRefresh.sql'
 # Use OldDatabaseName from config for sequence copy
 $SourceDbOld = $config.OldDatabaseName
-# Debug output for SourceDbOld
 $debugSourceDbMsg = "[DEBUG] Value of SourceDbOld before sequence copy: $SourceDbOld"
 Write-Host $debugSourceDbMsg
 Write-Log $debugSourceDbMsg $config.LogFile
@@ -188,8 +187,15 @@ if ($dbExists -eq 0) {
     Write-Host "[LOG] Starting sequence copy step for $Database (source: $SourceDbOld)..."
     Write-Log "Starting sequence copy step for $Database using $SqlSequenceFile and source $SourceDbOld" $config.LogFile
 
-    # Run the SQL sequence copy and capture output, passing the correct database parameter
-    $sequenceOutput = Invoke-EnvironmentDataCopy -Database $SourceDbOld -SqlFilePath $SqlSequenceFile -SqlServerInstance $sqlInstance
+    # Debug: Log the actual SQLCMD variable value used for $(OldDatabaseName)
+    Write-Host "[DEBUG] Passing SQLCMD variable: OldDatabaseName=$SourceDbOld to $SqlSequenceFile"
+    Write-Log "[DEBUG] Passing SQLCMD variable: OldDatabaseName=$SourceDbOld to $SqlSequenceFile" $config.LogFile
+    # Run the SQL sequence copy and capture output, passing OldDatabaseName as a SQLCMD variable
+    $sequenceOutput = sqlcmd -S $sqlInstance -i $SqlSequenceFile -v OldDatabaseName=$SourceDbOld
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] sqlcmd failed to pass OldDatabaseName variable. Check that the value is set and the variable is referenced in the SQL script."
+        Write-Log "[ERROR] sqlcmd failed to pass OldDatabaseName variable. Value: $SourceDbOld" $config.LogFile
+    }
 
     # Log the output from sqlcmd (sequence operations)
     if ($sequenceOutput) {

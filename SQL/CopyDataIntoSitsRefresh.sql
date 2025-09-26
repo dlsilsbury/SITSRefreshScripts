@@ -16,7 +16,7 @@ SET NOCOUNT ON;
 -- Set environment name here (SISB, SIIT, SITR)
 :SETVAR Database SISB
 DECLARE @Database NVARCHAR(10) = '$(Database)';
-DECLARE @OldDb NVARCHAR(50) = @Database + 'Old';
+DECLARE @OldDb NVARCHAR(50) = '$(OldDatabaseName)';
 DECLARE @RefreshDb NVARCHAR(50) = 'SITSRefresh';
 
 DECLARE @HousekeepingTables TABLE (TableName NVARCHAR(128))
